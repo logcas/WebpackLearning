@@ -643,6 +643,23 @@ module.exports = merge(baseConfig, {
 
 然后我们就可以使用`npm script`去分别构建不同环境的文件了。
 
+现在我们把构建文件分为了两个，分别对应着不同环境的构建。这时候就要修正一下`webpack.base.conf.js`了。
+
+因为之前我们都是用`webpack --config build/webpack.base.conf.js`去进行构建的，所以我们把`clean-webpack-plugin`写在了里面，以便每次构建前都清空`dist`目录。实际上我们并不需要在开发环境下这样做，只需要在生产环境下即可。因此，我们把它从`webpack.base.conf.js`中提取出来，剪切到`webpack.prod.conf.js`中：
+```js
+// webpack.prod.conf.js
+const baseConfig = require('./webpack.base.conf');
+const merge = require('webpack-merge');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+
+module.exports = merge(baseConfig, {
+  mode: 'production',
+  plugins: [
+    new CleanWebpackPlugin(),
+  ]
+});
+```
+
 ## 搭建本地服务器和热更新
 目前我们每次调试时都是手动打开`index.html`或者刷新。但是，为了更装逼，我们要搭建一个本地服务器，然后通过`http://localhost:xxxx`去访问它，这时候就要用到`webpack-dev-server`。
 
