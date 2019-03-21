@@ -137,3 +137,69 @@ resolve: {
 在上面的配置，我们定义了`@`别名，用来指向`src`目录的为止，这样我们引入文件的时候就可以使用`import xxx from '@/xxx.vue'`这样的形式来表明从`src`目录下的`xxx.vue`文件；另外我们还定义了`components`别名，用来指向`src/components`目录，更方便我们的引入。同时它们在`html`标签的引入中也是有效的。
 
 然后当你重新构建时，就可以生效了，不信可以试试。
+
+## 处理样式
+实际上你会发现，并不需要处理任何样式问题，样式依然可以正常。那我们还要处理什么样式问题呢？
+
+Vue官方提供了一个叫`vue-style-loader`的东西，它是基于`style-loader`去开发的，同时也是`vue-loader`的依赖和解析CSS默认使用的`loader`。那它和`style-loader`有什么不同？从官方的说明上表示，它支持服务端渲染。对于SSR，目前笔者实际上也不太懂，但是为了更接近`vue-cli`生成的配置，我们就用它来代替`style-loader`把。
+
+当我们打开`webpack.base.conf.js`时就会发现，我们早已使用`MiniCssExtractPlugin.loader`代替`style-loader`，以便于CSS样式代码的提取和分离。
+
+但是`vue-loader`官方文档上有这么一段话：`请只在生产环境下使用 CSS 提取，这将便于你在开发环境下进行热重载。`。意思就是当开发环境下我们最好使用`vue-style-loader`，因为它不会提取CSS，便于本地开发服务器的热重载；而当我们需要打包构建成在生产环境运行的代码时，我们可以使用`MiniCssExtractPlugin.loader`进行样式的分离。
+
+基于以上的问题，我们就要开始修改配置文件。这时候我们就要结合Node.js中的`process.env.NODE_ENV`去判断是生产环境还是开发环境，以便于我们修改配置文件，确认使用哪一个loader。
+
+```js
+// webpack.base.conf.js
+// 篇幅优先，仅保留更新部分
+
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.(sc|sa|c)ss$/,
+        use: [{
+            loader: process.env.NODE_ENV !== 'production' ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+          },
+          {
+            loader: 'css-loader'
+          },
+          {
+            loader: 'postcss-loader'
+          },
+          {
+            loader: 'sass-loader'
+          },
+        ]
+      },
+    ]
+  },
+};
+```
+
+em.....如果我们直接运行`npm run build`的话，Windows平台下可能会发现并没有分离样式，也就是说`process.env.NODE_ENV`并没有产生作用。（其他平台可能是正常的）
+
+然后我把`package.json`中的`scripts`更改成了这样：
+```json
+  "scripts": {
+    "build": "set NODE_ENV=production && webpack --config build/webpack.prod.conf.js",
+    "dev": "set NODE_ENV=development && webpack-dev-server --config build/webpack.dev.conf.js --open"
+  },
+```
+
+然后还是不行，也就是说Windows平台下`set NODE_ENV=production`可能会出问题。所以我把目光投向了万能的搜索引擎，找到了一个叫`cross-env`的包，它可以帮助我们解决跨平台下设置`NODE_ENV`的问题。
+
+首先依然是下载这个包：
+```
+npm install cross-env -D
+```
+
+然后就把`package.json`中的`scripts`更改成这样子：
+```json
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --config build/webpack.prod.conf.js",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --config build/webpack.dev.conf.js --open"
+  },
+```
+
+执行`npm run build`，成功分离样式！

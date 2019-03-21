@@ -2,9 +2,9 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const webpack = require('webpack');
 
 module.exports = {
-  mode: 'development',
   entry: path.resolve(__dirname, '..', 'src', 'main.js'),
   output: {
     path: path.resolve(__dirname, '..', 'dist'),
@@ -24,7 +24,8 @@ module.exports = {
       {
         test: /\.(sc|sa|c)ss$/,
         use: [{
-            loader: MiniCssExtractPlugin.loader,
+            loader: process.env.NODE_ENV !== 'production' ?
+              'vue-style-loader' : MiniCssExtractPlugin.loader,
           },
           {
             loader: 'css-loader'
@@ -110,7 +111,7 @@ module.exports = {
   resolve: {
     alias: {
       vue: 'vue/dist/vue.js',
-      '@':  path.resolve(__dirname, '../src'),
+      '@': path.resolve(__dirname, '../src'),
       'components': path.resolve(__dirname, '../src', 'components'),
     }
   }

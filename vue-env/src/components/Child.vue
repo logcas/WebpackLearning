@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p>我来自src/components</p>
+    <p id="name">我来自src/components</p>
     <img src="@/images/2.jpg">
   </div>
 </template>
@@ -10,3 +10,9 @@ export default {
   name: 'child',
 }
 </script>
+
+<style lang="scss" scoped>
+.name {
+  color: red;
+}
+</style>
