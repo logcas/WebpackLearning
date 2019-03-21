@@ -310,6 +310,8 @@ npm install node-sass sass-loader -D
       },
 ```
 
+上面表明对于`.scss\.css\.sass`文件，`loader`的处理顺序是`sass-loader => css-loader => style-loader`。因为，`Webpack`中`loader`处理文件的顺序是从右往左的。
+
 然后我们把样式`main.css`更改为`main.scss`，并且在`main.js`中重新引入：
 ```scss
 /* main.scss */
@@ -363,6 +365,50 @@ module.exports = {
 ```
 
 然后，就没有了，因为已经完成了，很简单吧？当然，`PostCSS`的作用肯定不止自动添加前缀，你可以看着文档试试别的。
+
+#### 分离样式
+目前为止，我们的样式是写在JS文件上的。通常为了更好地利用缓存机制，我们需要把`.css`文件和`.js`文件分离。分离样式需要用到一个叫`mini-css-extract-plugin`的插件。
+
+先来下载它：
+```
+cnpm install mini-css-extract-plugin -D
+```
+
+然后我们在`plugins`属性中添加它的一个实例，并且把`style-loader`替换成`MiniCssExtractPlugin.loader`：
+```js
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+module.exports = {
+  // 省略了其他配置...
+  module: {
+    rules: [
+      {
+        test: /\.(sc|sa|c)ss$/,
+        use: [{
+            loader: MiniCssExtractPlugin.loader,
+          },
+          {
+            loader: 'css-loader'
+          },
+          {
+            loader: 'postcss-loader'
+          },
+          {
+            loader: 'sass-loader'
+          },
+        ]
+      },
+    ]
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: 'css/[name].[hash].css',
+    }),
+  ]
+};
+```
+
+然后再次构建，我们就会发现样式文件已经分离到了`dist/css`中。
 
 ### 整理我们的`dist`目录
 现在我们看一下`dist`目录就会发现，生成了N多个`main.[hash].js`文件。在我们每次构建完后，都会生成一个哈希值不同的打包后的JS文件，这样就会使我们`dist`目录下新旧文件都存在造成混乱而无法管理的问题，毕竟对于`dist`目录，我们是希望把每次新打包的文件都放进去，而旧的就删掉。我们可以通过一个叫`clean-webpack-plugin`的插件去解决这个问题。
@@ -630,5 +676,4 @@ module.exports = merge(baseConfig, {
 
 ![本地服务器](http://img.lxzmww.xyz/webpack/spa/%E6%9C%AC%E5%9C%B0%E6%9C%8D%E5%8A%A1%E5%99%A8.PNG)
 
-## 顺势搭建Vue开发环境
-待更新
+OK，基本的环境就搭建完毕了！（当前目前是没有任何优化的）
