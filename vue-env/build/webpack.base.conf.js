@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
   mode: 'development',
@@ -12,7 +13,10 @@ module.exports = {
     chunkFilename: '[id].[hash].js',
   },
   module: {
-    rules: [
+    rules: [{
+        test: /\.vue$/,
+        loader: 'vue-loader',
+      },
       {
         test: /\.js$/,
         exclude: /node_modules/,
@@ -103,5 +107,13 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: 'css/[name].[hash].css',
     }),
-  ]
+    new VueLoaderPlugin(),
+  ],
+  resolve: {
+    alias: {
+      vue: 'vue/dist/vue.js',
+      '@':  path.resolve(__dirname, '../src'),
+      'components': path.resolve(__dirname, '../src', 'components'),
+    }
+  }
 };
