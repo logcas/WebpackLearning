@@ -76,13 +76,11 @@ export default {
 ```js
 // main.js
 import Vue from 'vue';
-import App from './App.vue';
+import App from '@/App.vue';
 
 new Vue({
-  el: '#app',
-  components: { App },
-  template: '<app />'
-});
+  render: h => h(App)
+}).$mount('#app');
 ```
 
 然后我们执行`npm run dev`，在开发环境下运行，打开`http://localhost:8081`。
@@ -282,7 +280,7 @@ not ie <= 8
 
 安装：
 ```
-npm install eslint eslint-loader -D
+npm install eslint eslint-loader eslint-plugin-vue -D
 ```
 
 然后我们在`webpack.base.conf.js`中`rules`数组添加一个校验规则：
@@ -305,22 +303,9 @@ npm install eslint eslint-loader -D
 然后我们在根目录下添加一个`.eslintrc`去说明配置：
 ```js
 module.exports = {
-  root: true,
-  env: {
-    node: true
-  },
-  'extends': [
-    'plugin:vue/essential',
-    'eslint:recommended'
-  ],
-  rules: {
-    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-    'no-useless-escape': 0,
-  },
-  parserOptions: {
-    parser: 'babel-eslint'
-  }
+  extends: [
+    "plugin:vue/essential"
+  ]
 }
 ```
 
