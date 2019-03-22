@@ -203,3 +203,130 @@ npm install cross-env -D
 ```
 
 执行`npm run build`，成功分离样式！
+
+## 复制`public`文件夹的内容
+如果通过`vue-cli 3`来创建一个项目，它会生成一个`public`文件夹，里面包含一个`index.html`和`favicon.ico`。通过`vue-cli`的官方文档可知，`public`文件夹的内容是在构建时直接复制到`dist`目录的，而不通过`loader`作任何处理。至于`public`文件夹中应该什么时候利用它，官方作了如下说明：
+
+1. 你需要在构建输出中指定一个文件的名字。
+2. 你有上千个图片，需要动态引用它们的路径。
+3. 有些库可能和 webpack 不兼容，这时你除了将其用一个独立的 <script> 标签引入没有别的选择。
+
+就目前而言，笔者是没有动过`public`里面的内容。但是为了搭建一个更完整的Vue开发环境，笔者选择通过`copy-webpack-plugin`的插件来实现文件夹内容的复制。
+
+首先通过npm安装它：
+```
+npm install copy-webpack-plugin -D
+```
+
+然后把插件引入到`webpack.base.conf.js`：
+```js
+// 篇幅优先，仅显示关键配置
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new CopyWebpackPlugin([
+      { from: path.resolve(__dirname, '../public'), to: path.resolve(__dirname, '../dist') }
+    ])
+  ]
+}
+```
+
+## 使用`browserslist`
+`browserslist`是在不同的前端工具之间共用目标浏览器和 node 版本的配置工具。它主要被以下工具使用：
+
+1. `autoprefixer`
+2. `babel`
+3. `post-preset-env`
+4. `eslint-plugin-compat`
+5. `stylelint-unsupported-browser-features`
+6. `postcss-normalize`
+
+以上所有工具都会通过`browserslist`自动查找当前项目的目标浏览器范围，同时`browserslist`也说明了当前项目支持的浏览器范围。我们可以通过两种方法去设置：
+
+1. 在`package.json`中添加`browserslist`字段，例如：
+```json
+{
+  "browserslist": [
+    "last 1 version",
+    "> 1%",
+    "maintained node versions",
+    "not dead"
+  ]
+}
+```
+
+2. 在项目根目录中添加`.browserslistrc`文件，并写入一些查询规则：
+```
+# Browsers that we support
+
+last 1 version
+> 1%
+maintained node versions
+not dead
+```
+
+这里的话笔者选择了第二种方法，因为对于一些如`.babelrc`这类的配置，笔者还是比较喜欢把它们单独出一个文件。所以这里就在根目录下创建了一个`.browserslistrc`文件，并且参照了`vue-cli`的默认配置：
+```
+> 1%
+last 2 versions
+not ie <= 8
+```
+
+上面的规则表示：份额大于1%的浏览器、最新的两个版本、不支持IE8及以下。
+
+当然，你可以根据项目的实际状况去填写，更多介绍可以查看它们的官方文档：https://github.com/browserslist/browserslist
+
+## 使用`ESlint`
+`ESlint`是一个代码校验的工具，对于团队协作开发时，代码风格统一有着很重要的作用，使用`ESlint`可以帮助我们解决这个问题。
+
+安装：
+```
+npm install eslint eslint-loader -D
+```
+
+然后我们在`webpack.base.conf.js`中`rules`数组添加一个校验规则：
+```js
+// 省略了其他配置信息
+  module: {
+    rules: [
+      {
+        enforce: 'pre', // 前置处理
+        test: /\.(js|vue)$/,
+        loader: 'eslint-loader',
+        exclude: /node_modules/
+      },
+    ]
+  }
+```
+
+这个配置信息需要注意的一点是，需要添加`enforce: 'pre'`的字段，使得在文件被`eslint-loader`处理前不被其他`loader`处理。尤其是需要在`babel-loader`前，因为通过`babel-loader`处理后，代码已经不是原来的样子，这时用`eslint`简直白搞。
+
+然后我们在根目录下添加一个`.eslintrc`去说明配置：
+```js
+module.exports = {
+  root: true,
+  env: {
+    node: true
+  },
+  'extends': [
+    'plugin:vue/essential',
+    'eslint:recommended'
+  ],
+  rules: {
+    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-useless-escape': 0,
+  },
+  parserOptions: {
+    parser: 'babel-eslint'
+  }
+}
+```
+
+实际上具体的配置还要结合自己项目的实际需求，详细配置信息可以查阅官方文档。
+
+# 结语
+OK，基本的搭建已经完成，优化的话笔者对于`Webpack`还是入门级别，还需要多学习这方面的知识才能完善优化这方面的内容。
+
+前端真的好多东西啊！！！

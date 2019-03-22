@@ -2,7 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: path.resolve(__dirname, '..', 'src', 'main.js'),
@@ -20,6 +20,12 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'babel-loader',
+      },
+      {
+        enforce: 'pre', // 前置处理
+        test: /\.(js|vue)$/,
+        loader: 'eslint-loader',
+        exclude: /node_modules/
       },
       {
         test: /\.(sc|sa|c)ss$/,
@@ -107,6 +113,9 @@ module.exports = {
       filename: 'css/[name].[hash].css',
     }),
     new VueLoaderPlugin(),
+    new CopyWebpackPlugin([
+      { from: path.resolve(__dirname, '../public'), to: path.resolve(__dirname, '../dist') }
+    ])
   ],
   resolve: {
     alias: {
